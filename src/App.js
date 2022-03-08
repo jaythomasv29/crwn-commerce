@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import Header from "./components/header/header.component";
 import HomePage from "./pages/homepage/homepage.component";
 import LoginAndRegister from "./pages/signin-and-register/signin-and-register.component";
-import { auth } from './firebase/firebase.utils'
+import { auth, createUserProfileDocument, readData } from './firebase/firebase.utils'
 import {
   BrowserRouter as Router,
   Switch,
@@ -25,24 +25,6 @@ const HatsPage = () => {
     </div>
   );
 };
-
-const TopicsList = () => {
-  return (
-    <div>
-      <h1>Topics List Page</h1>
-    </div>
-  );
-};
-
-const TopicDetail = (props) => {
-  console.log(props);
-  return (
-    <div>
-      <h1>Topic Detail Page</h1>
-    </div>
-  );
-};
-
 class App extends Component {
   constructor() {
     super()
@@ -55,10 +37,27 @@ class App extends Component {
   unsubscribeFromAuth = null
 
   componentDidMount() {
-    this.unsubscribeFromAuth = auth.onAuthStateChanged(user => {
-      this.setState({ currentUser: user})
-      console.log(user)
+   readData().then(console.log)
+    this.unsubscribeFromAuth = auth.onAuthStateChanged(async userAuth => {
+      if(userAuth){
+        const userRef = createUserProfileDocument(userAuth)
+        // get data from snapshot
+        console.log('ref snap', (await userRef).data())
+        const userSnapshotData = (await userRef).data()
+       // set State to the current user
+        this.setState({ currentUser: {
+          // id: userSnapshotData.id,
+          ...userSnapshotData
+          }
+        }, () => {console.log(this.state)})
+        
+        // this.setState({ currentUser: user})
+        
+      } else {
+        this.setState({ currentUser: userAuth })
+      }
     })
+
   }
 
   componentWillUnmount() {

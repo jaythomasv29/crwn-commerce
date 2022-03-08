@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';  // initialize firebase in app
 
-import { getFirestore, collection, getDocs } from 'firebase/firestore/lite';
+import { getFirestore, collection, getDoc, doc, getDocs, setDoc } from 'firebase/firestore';
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
 // config details
@@ -17,6 +17,39 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app)
 
+export const readData = async () => {
+  const userCol = collection(db, 'users');
+  const userSnapshot = await getDocs(userCol);
+  const userList = userSnapshot.docs.map(doc => doc.data());
+  return userList;
+}
+
+export const createUserProfileDocument = async (userAuth, additionalData) => {
+  if(!userAuth) return;
+  const userRef = doc(db, "users", userAuth.uid)
+  const docSnap = await getDoc(userRef)
+  if(docSnap.exists()) {
+    console.log('User Data already in db:', docSnap.data())
+  } else {
+    console.log('creating new user...adding to db', userAuth,)
+    const { displayName, email } = userAuth
+    const createdAt = new Date()
+    try {
+      await setDoc(doc(db, "users", userAuth.uid), {
+        displayName,
+        email,
+        createdAt,
+        ...additionalData
+      })
+    } catch (e) {
+      console.log('error creating user', e.message)
+    }
+    
+  }
+  return docSnap
+}
+
+
 // call getAuth with app and export it for use in app
 export const auth = getAuth(app)
 
@@ -31,12 +64,12 @@ const provider = new GoogleAuthProvider();
 This allows a user who has multiple accounts at the authorization
  server to select amongst the multiple accounts that they may have current sessions for.
  https://developers.google.com/identity/protocols/oauth2/openid-connect#authenticationuriparameters */
- provider.setCustomParameters({ propt: 'select_account' });
+ provider.setCustomParameters({ prompt: 'select_account' });
 
  signInWithPopup(auth, provider)
   .then((result) => {
     // This gives you a Google Access Token. You can use it to access the Google API.
-    console.log(result)
+    // console.log(result)
     const credential = GoogleAuthProvider.credentialFromResult(result);
     const token = credential.accessToken;
     // The signed-in user info.
@@ -53,5 +86,3 @@ This allows a user who has multiple accounts at the authorization
     // ...
   })
 }
-
-//export firebase in case we want the firebase library
