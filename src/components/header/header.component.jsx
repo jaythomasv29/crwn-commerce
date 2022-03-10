@@ -5,7 +5,9 @@ import { connect } from 'react-redux'  // import higher order function connect f
 import './header.styles.scss'
 
 import { ReactComponent as Logo } from '../../assets/crown.svg';
-const Header = ({currentUser}) => (
+import CartIcon from '../cart-icon/cart-icon.component';
+import CartDropDown from '../cart-dropdown/cart-dropdown.component';
+const Header = ({currentUser, hidden}) => (
   <div className="header">
     <div className="logo-container">
     <Link to="/">
@@ -21,12 +23,20 @@ const Header = ({currentUser}) => (
         <div className="option" onClick={ () => auth.signOut() }>SIGN OUT</div>
         : <Link className="option" to="/signin">SIGN IN</Link>
       }
+      <CartIcon />
     </div>
+      {
+        hidden ? null : <CartDropDown />
+      }
   </div>
 )
 
-const mapStateToProps = (state) => (
-  {currentUser: state.user.currentUser}
+const mapStateToProps = ({user: { currentUser }, cart: { hidden }}) => (
+  {
+    currentUser, 
+    hidden
+  }
 )
 // connect is used to access state from our root reducer
+
 export default connect(mapStateToProps)(Header);
