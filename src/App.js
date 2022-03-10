@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import Header from "./components/header/header.component";
 import HomePage from "./pages/homepage/homepage.component";
 import ShopPage from "./pages/shop/shop.component";
-import LoginAndRegister from "./pages/signin-and-register/signin-and-register.component";
+import SigninAndRegister from "./pages/signin-and-register/signin-and-register.component";
 import { auth, createUserProfileDocument, readData } from './firebase/firebase.utils'
 import {
   BrowserRouter as Router,
@@ -10,16 +10,16 @@ import {
   Route,
   Link,
   useParams,
+  Redirect,
 } from "react-router-dom";
 import { connect } from 'react-redux'
 import { setCurrentUser } from './redux/user/user.actions'
-
 
 import "./App.css";
 
 const HatsPage = () => {
   let { id } = useParams();
-
+  
   console.log(id);
   return (
     <div>
@@ -31,7 +31,7 @@ const HatsPage = () => {
 class App extends Component {
   
   unsubscribeFromAuth = null
-
+  
   componentDidMount() {
   //  readData().then(console.log)
     const { setCurrentUser } = this.props;
@@ -47,8 +47,6 @@ class App extends Component {
           ...userSnapshotData
           }
         })
-        
-        // this.setState({ currentUser: user})
         
       } else {
         setCurrentUser(userAuth)
@@ -68,17 +66,20 @@ class App extends Component {
         <Header />
         {/* <HomePage /> */}
         <Switch>
-          <Route path="/signin">
-            <LoginAndRegister />
+          <Route exact path="/"> 
+            <HomePage />
           </Route>
+            
+          <Route exact path="/signin">
+            
+           { this.props.currentUser ? <Redirect to="/" /> : <SigninAndRegister /> } 
+          </Route>
+          
           <Route path="/shop">
             <ShopPage />
           </Route>
           <Route path="/shop/hats">
             <HatsPage />
-          </Route>
-          <Route exact path="/">
-            <HomePage />
           </Route>
         </Switch>
       </Router>
@@ -87,8 +88,13 @@ class App extends Component {
   }
 }
 
+const mapStateToProps = ({ user }) => ({
+  // get currentUser from store 
+  currentUser: user.currentUser
+})
+
 const mapDispatchToProps = dispatch => ({
   setCurrentUser: user => dispatch(setCurrentUser(user))
 })
 
-export default connect(null, mapDispatchToProps)(App);
+export default connect(mapStateToProps, mapDispatchToProps)(App);
